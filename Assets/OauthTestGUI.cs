@@ -256,21 +256,21 @@ public class OauthTestGUI : MonoBehaviour {
     {
         if (url.IndexOf('?') == -1)
         {
-            url += "?client_token=" + token;
+            url += "?access_token=" + token;
         }
         else
         {
-            url += "&client_token=" + token;
+            url += "&access_token=" + token;
         }
 
         // Must use WWWForm to force POST method
         WWWForm form = new WWWForm();
-        form.AddField("client_token", token);
+        form.AddField("access_token", token);
         // If there is a secret as well
         if (!secret.Equals(""))
         {
-            url += "&client_secret=" + secret;
-            form.AddField("client_secret", secret);
+            url += "&access_token_secret=" + secret;
+            form.AddField("access_token_secret", secret);
         }
         WWW www = new WWW(url, form);
     }
