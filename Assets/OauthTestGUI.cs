@@ -21,8 +21,12 @@ public class OauthTestGUI : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         FacebookAndroid.init();
+
         // This is technically a security issue - having the consumer secret in plaintext is bad practice.
-        TwitterAndroid.init("lnPEQhhVho6fu9dd6FqLfhQ2L", "4Re1gImPvYhBhGX2jL2rb5xjraF3q6pWwWWpmKIVNAXwtcrYFG");
+        TwitterAndroid.init("F2FsdXIWjWTexgu55Cf6ER9Ld", "mh3VaoX2XpXvky0IUylDeSH742zUbtyMU61pOS2MBkPsivr5fd");
+        // Uncomment for Twitter App 2
+        //TwitterAndroid.init("Xp8GZ9AM9WEDTJlpyH8Sh7gQ2", "k4s6C54QvyYqzesXGnzdoETrYp4FRD6ozPjjcbZ1JVIsgvRAFY");
+
 		//Initializing GooglePlay platform
 		PlayGamesPlatform.Activate();
 	}
