@@ -5,19 +5,30 @@ using System;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
+using GooglePlayGames;
+using UnityEngine.SocialPlatforms;
 
 public class OauthTestGUI : MonoBehaviour {
 
     private Boolean isFB = true;
     string url = "";
+	int server;
+	private String SCOPE_BASE = "audience:server:client_id:";
+	private String SCOPE;
+	private String CLIENT_ID = "729703693962-g5ol9mh39f2trarq7f0qt353gdens3sl.apps.googleusercontent.com";
+
     
 	// Use this for initialization
 	void Start () {
         FacebookAndroid.init();
+
         // This is technically a security issue - having the consumer secret in plaintext is bad practice.
         TwitterAndroid.init("F2FsdXIWjWTexgu55Cf6ER9Ld", "mh3VaoX2XpXvky0IUylDeSH742zUbtyMU61pOS2MBkPsivr5fd");
         // Uncomment for Twitter App 2
         //TwitterAndroid.init("Xp8GZ9AM9WEDTJlpyH8Sh7gQ2", "k4s6C54QvyYqzesXGnzdoETrYp4FRD6ozPjjcbZ1JVIsgvRAFY");
+
+		//Initializing GooglePlay platform
+		PlayGamesPlatform.Activate();
 	}
 	
 	// Update is called once per frame
@@ -40,22 +51,30 @@ public class OauthTestGUI : MonoBehaviour {
         {
             DoFacebookLogin();
             isFB = true;
+			server = 0;
         }
         if (GUI.Button(new Rect(Screen.width / 2, 150, Screen.width / 2, 100), "Twitter", buttonStyle))
         {
             DoTwitterLogin();
             isFB = false;
+			server = 1;
         }
-        if (GUI.Button(new Rect(0, 250, Screen.width, 100), "Submit Token", buttonStyle))
+		if (GUI.Button(new Rect(0, 250, Screen.width / 2, 100), "Google", buttonStyle))
+		{
+			DoGoogleLogin();
+			isFB = false;
+			server = 2;
+		}
+        if (GUI.Button(new Rect(0, 350, Screen.width, 100), "Submit Token", buttonStyle))
         {
             string[] t = CurrentAccessToken();
             SubmitToken(t[0], t[1], url);
         }
-        if (GUI.Button(new Rect(0, 350, Screen.width, 100), "Print Token", buttonStyle))
+        if (GUI.Button(new Rect(0, 450, Screen.width, 100), "Print Token", buttonStyle))
         {
             Debug.Log("Access Token: " + CurrentAccessToken());
         }
-        GUI.TextField(new Rect(0, 450, Screen.width, 100), CurrentAccessToken()[0], textFieldStyle);
+        GUI.TextField(new Rect(0, 550, Screen.width, 100), CurrentAccessToken()[0], textFieldStyle);
     }
 
     void DoFacebookLogin()
@@ -66,9 +85,45 @@ public class OauthTestGUI : MonoBehaviour {
     {
         TwitterAndroid.showLoginDialog();
     }
+	void DoGoogleLogin() {
+		Social.localUser.Authenticate (success => {
+			if (success) {
+				Debug.Log ("Authentication successful");
+				string userInfo = "Username: " + Social.localUser.userName + 
+					"\nUser ID: " + Social.localUser.id + 
+						"\nIsUnderage: " + Social.localUser.underage;
+				Debug.Log (userInfo);
+			}
+			else
+				Debug.Log ("Authentication failed");
+		});
+	}
     private string[] CurrentAccessToken()
     {
-        if (isFB)
+
+		switch(server) {
+		case 0:
+			return new string[] {FacebookAndroid.getAccessToken(), ""};
+		case 1:
+			// prime31 hasn't publicly exposed the token, but this is the official way to get it
+			AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+			AndroidJavaObject activity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+			AndroidJavaObject sharedPreferences = activity.Call<AndroidJavaObject>("getSharedPreferences", "Twitter_Preferences", 0);
+			
+			string oauthToken = sharedPreferences.Call<string>("getString", "auth_key", null);
+			string oauthTokenSecret = sharedPreferences.Call<string>("getString", "auth_secret_key", null);
+			return new string[] {oauthToken, oauthTokenSecret};
+		case 2:
+			SCOPE = SCOPE_BASE + CLIENT_ID;
+			AndroidJavaClass googleAuthUtilClass = new AndroidJavaClass("com.google.android.gms.auth.GoogleAuthUtil");
+			string result = googleAuthUtilClass.CallStatic<string>("getToken", new object[] {this, Social.localUser.userName, SCOPE});	
+			return new string[] {result, ""};
+		}
+		return null;
+
+
+
+		/*if (isFB)
         {
             return new string[] {FacebookAndroid.getAccessToken(), ""};
         }
@@ -82,7 +137,7 @@ public class OauthTestGUI : MonoBehaviour {
             string oauthToken = sharedPreferences.Call<string>("getString", "auth_key", null);
             string oauthTokenSecret = sharedPreferences.Call<string>("getString", "auth_secret_key", null);
             return new string[] {oauthToken, oauthTokenSecret};
-        }
+        }*/
     }
 /*    void TwitterRequestToken()
     {
@@ -258,21 +313,21 @@ public class OauthTestGUI : MonoBehaviour {
     {
         if (url.IndexOf('?') == -1)
         {
-            url += "?access_token=" + token;
+            url += "?client_token=" + token;
         }
         else
         {
-            url += "&access_token=" + token;
+            url += "&client_token=" + token;
         }
 
         // Must use WWWForm to force POST method
         WWWForm form = new WWWForm();
-        form.AddField("access_token", token);
+        form.AddField("client_token", token);
         // If there is a secret as well
         if (!secret.Equals(""))
         {
-            url += "&access_token_secret=" + secret;
-            form.AddField("access_token_secret", secret);
+            url += "&client_secret=" + secret;
+            form.AddField("client_secret", secret);
         }
         WWW www = new WWW(url, form);
     }
@@ -296,3 +351,4 @@ public class OauthTestGUI : MonoBehaviour {
         return result.ToString();
     }
 }
+
