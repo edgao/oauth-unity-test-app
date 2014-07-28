@@ -9,24 +9,25 @@ using GooglePlayGames;
 using UnityEngine.SocialPlatforms;
 
 public class OauthTestGUI : MonoBehaviour {
-
-    private Boolean isFB = true;
-    string url = "";
+	
+	private Boolean isFB = true;
+	string url = "";
 	int server;
-	private String SCOPE_BASE = "audience:server:client_id:";
+	/*private String SCOPE_BASE = "audience:server:client_id:";
 	private String SCOPE;
-	private String CLIENT_ID = "729703693962-g5ol9mh39f2trarq7f0qt353gdens3sl.apps.googleusercontent.com";
-
-    
+	private String CLIENT_ID = "729703693962-g5ol9mh39f2trarq7f0qt353gdens3sl.apps.googleusercontent.com";*/
+	String mEmail;
+	String mScope;
+	//String mEmail = "edward@mogotxt.com";
+	//String mScope = "audience:server:client_id:729703693962-06r6rodhmbquar0d84kdlhffo6nbhdcl.apps.googleusercontent.com";
+	String token;
+	
+	
 	// Use this for initialization
 	void Start () {
-        FacebookAndroid.init();
-
-        // This is technically a security issue - having the consumer secret in plaintext is bad practice.
-        TwitterAndroid.init("F2FsdXIWjWTexgu55Cf6ER9Ld", "mh3VaoX2XpXvky0IUylDeSH742zUbtyMU61pOS2MBkPsivr5fd");
-        // Uncomment for Twitter App 2
-        //TwitterAndroid.init("Xp8GZ9AM9WEDTJlpyH8Sh7gQ2", "k4s6C54QvyYqzesXGnzdoETrYp4FRD6ozPjjcbZ1JVIsgvRAFY");
-
+		FacebookAndroid.init();
+		// This is technically a security issue - having the consumer secret in plaintext is bad practice.
+		TwitterAndroid.init("lnPEQhhVho6fu9dd6FqLfhQ2L", "4Re1gImPvYhBhGX2jL2rb5xjraF3q6pWwWWpmKIVNAXwtcrYFG");
 		//Initializing GooglePlay platform
 		PlayGamesPlatform.Activate();
 	}
@@ -34,57 +35,57 @@ public class OauthTestGUI : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 	}
-
-    void OnGUI()
-    {
-        GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
-        labelStyle.fontSize = 40;
-        GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
-        buttonStyle.fontSize = 40;
-        GUIStyle textFieldStyle = new GUIStyle(GUI.skin.textField);
-        textFieldStyle.fontSize = 40;
-
-        GUI.Label(new Rect(0, 0, Screen.width, 50), "Server URL", labelStyle);
-        url = GUI.TextField(new Rect(0, 50, Screen.width, 100), url, textFieldStyle);
-
-        if (GUI.Button(new Rect(0, 150, Screen.width / 2, 100), "Facebook", buttonStyle))
-        {
-            DoFacebookLogin();
-            isFB = true;
+	
+	void OnGUI()
+	{
+		GUIStyle labelStyle = new GUIStyle(GUI.skin.label);
+		labelStyle.fontSize = 40;
+		GUIStyle buttonStyle = new GUIStyle(GUI.skin.button);
+		buttonStyle.fontSize = 40;
+		GUIStyle textFieldStyle = new GUIStyle(GUI.skin.textField);
+		textFieldStyle.fontSize = 40;
+		
+		GUI.Label(new Rect(0, 0, Screen.width, 50), "Server URL", labelStyle);
+		url = GUI.TextField(new Rect(0, 50, Screen.width, 100), url, textFieldStyle);
+		
+		if (GUI.Button(new Rect(0, 150, Screen.width / 2, 100), "Facebook", buttonStyle))
+		{
+			DoFacebookLogin();
+			isFB = true;
 			server = 0;
-        }
-        if (GUI.Button(new Rect(Screen.width / 2, 150, Screen.width / 2, 100), "Twitter", buttonStyle))
-        {
-            DoTwitterLogin();
-            isFB = false;
+		}
+		if (GUI.Button(new Rect(Screen.width / 2, 150, Screen.width / 2, 100), "Twitter", buttonStyle))
+		{
+			DoTwitterLogin();
+			isFB = false;
 			server = 1;
-        }
+		}
 		if (GUI.Button(new Rect(0, 250, Screen.width / 2, 100), "Google", buttonStyle))
 		{
 			DoGoogleLogin();
 			isFB = false;
 			server = 2;
 		}
-        if (GUI.Button(new Rect(0, 350, Screen.width, 100), "Submit Token", buttonStyle))
-        {
-            string[] t = CurrentAccessToken();
-            SubmitToken(t[0], t[1], url);
-        }
-        if (GUI.Button(new Rect(0, 450, Screen.width, 100), "Print Token", buttonStyle))
-        {
-            Debug.Log("Access Token: " + CurrentAccessToken());
-        }
-        GUI.TextField(new Rect(0, 550, Screen.width, 100), CurrentAccessToken()[0], textFieldStyle);
-    }
-
-    void DoFacebookLogin()
-    {
-        FacebookAndroid.loginWithPublishPermissions(new string[] {"email", "publish_actions"});
-    }
-    void DoTwitterLogin()
-    {
-        TwitterAndroid.showLoginDialog();
-    }
+		if (GUI.Button(new Rect(0, 350, Screen.width, 100), "Submit Token", buttonStyle))
+		{
+			string[] t = CurrentAccessToken();
+			SubmitToken(t[0], t[1], url);
+		}
+		if (GUI.Button(new Rect(0, 450, Screen.width, 100), "Print Token", buttonStyle))
+		{
+			Debug.Log("Access Token: " + CurrentAccessToken());
+		}
+		GUI.TextField(new Rect(0, 550, Screen.width, 100), CurrentAccessToken()[0], textFieldStyle);
+	}
+	
+	void DoFacebookLogin()
+	{
+		FacebookAndroid.loginWithPublishPermissions(new string[] {"email", "publish_actions"});
+	}
+	void DoTwitterLogin()
+	{
+		TwitterAndroid.showLoginDialog();
+	}
 	void DoGoogleLogin() {
 		Social.localUser.Authenticate (success => {
 			if (success) {
@@ -93,14 +94,17 @@ public class OauthTestGUI : MonoBehaviour {
 					"\nUser ID: " + Social.localUser.id + 
 						"\nIsUnderage: " + Social.localUser.underage;
 				Debug.Log (userInfo);
+				mEmail = "Social.localUser.userName";
+				mScope = "oauth2:https://www.googleapis.com/auth/userinfo.profile";
+				
 			}
 			else
 				Debug.Log ("Authentication failed");
 		});
 	}
-    private string[] CurrentAccessToken()
-    {
-
+	private string[] CurrentAccessToken()
+	{
+		
 		switch(server) {
 		case 0:
 			return new string[] {FacebookAndroid.getAccessToken(), ""};
@@ -114,15 +118,19 @@ public class OauthTestGUI : MonoBehaviour {
 			string oauthTokenSecret = sharedPreferences.Call<string>("getString", "auth_secret_key", null);
 			return new string[] {oauthToken, oauthTokenSecret};
 		case 2:
-			SCOPE = SCOPE_BASE + CLIENT_ID;
+			AndroidJavaClass jc = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+			AndroidJavaObject jo = jc.GetStatic<AndroidJavaObject>("currentActivity");
 			AndroidJavaClass googleAuthUtilClass = new AndroidJavaClass("com.google.android.gms.auth.GoogleAuthUtil");
-			string result = googleAuthUtilClass.CallStatic<string>("getToken", new object[] {this, Social.localUser.userName, SCOPE});	
-			return new string[] {result, ""};
+			AndroidJavaObject androidEmailString = new AndroidJavaObject("java.lang.String", mEmail);
+			AndroidJavaObject androidScopeString = new AndroidJavaObject("java.lang.String", mScope);
+			token = googleAuthUtilClass.CallStatic<string>("getToken", new object[] {jo, androidEmailString, androidScopeString});
+			Debug.Log ("token");
+			return new string[] {token, ""};
 		}
 		return null;
-
-
-
+		
+		
+		
 		/*if (isFB)
         {
             return new string[] {FacebookAndroid.getAccessToken(), ""};
@@ -138,8 +146,8 @@ public class OauthTestGUI : MonoBehaviour {
             string oauthTokenSecret = sharedPreferences.Call<string>("getString", "auth_secret_key", null);
             return new string[] {oauthToken, oauthTokenSecret};
         }*/
-    }
-/*    void TwitterRequestToken()
+	}
+	/*    void TwitterRequestToken()
     {
         string consumerSecret = "4Re1gImPvYhBhGX2jL2rb5xjraF3q6pWwWWpmKIVNAXwtcrYFG";
         string oauthConsumerKey = "lnPEQhhVho6fu9dd6FqLfhQ2L";
@@ -309,46 +317,45 @@ public class OauthTestGUI : MonoBehaviour {
         sha.Initialize();
         return System.Convert.ToBase64String(sha.ComputeHash(Encoding.ASCII.GetBytes(sigBaseString)));
     }*/
-    void SubmitToken(string token, string secret, string url)
-    {
-        if (url.IndexOf('?') == -1)
-        {
-            url += "?client_token=" + token;
-        }
-        else
-        {
-            url += "&client_token=" + token;
-        }
-
-        // Must use WWWForm to force POST method
-        WWWForm form = new WWWForm();
-        form.AddField("client_token", token);
-        // If there is a secret as well
-        if (!secret.Equals(""))
-        {
-            url += "&client_secret=" + secret;
-            form.AddField("client_secret", secret);
-        }
-        WWW www = new WWW(url, form);
-    }
-    string URLEncode(string str)
-    {
-        // Rolling our own URLEncode because none of the built-in C#/Unity encoders do quite the right thing
-        string unreservedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~";
-        StringBuilder result = new StringBuilder();
-
-        foreach (char symbol in str) {
-            if (unreservedChars.IndexOf(symbol) != -1)
-            {
-                result.Append(symbol);
-            }
-            else
-            {
-                result.Append('%' + String.Format("{0:X2}", (int)symbol));
-            }
-        }
-
-        return result.ToString();
-    }
+	void SubmitToken(string token, string secret, string url)
+	{
+		if (url.IndexOf('?') == -1)
+		{
+			url += "?client_token=" + token;
+		}
+		else
+		{
+			url += "&client_token=" + token;
+		}
+		
+		// Must use WWWForm to force POST method
+		WWWForm form = new WWWForm();
+		form.AddField("client_token", token);
+		// If there is a secret as well
+		if (!secret.Equals(""))
+		{
+			url += "&client_secret=" + secret;
+			form.AddField("client_secret", secret);
+		}
+		WWW www = new WWW(url, form);
+	}
+	string URLEncode(string str)
+	{
+		// Rolling our own URLEncode because none of the built-in C#/Unity encoders do quite the right thing
+		string unreservedChars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.~";
+		StringBuilder result = new StringBuilder();
+		
+		foreach (char symbol in str) {
+			if (unreservedChars.IndexOf(symbol) != -1)
+			{
+				result.Append(symbol);
+			}
+			else
+			{
+				result.Append('%' + String.Format("{0:X2}", (int)symbol));
+			}
+		}
+		
+		return result.ToString();
+	}
 }
-
