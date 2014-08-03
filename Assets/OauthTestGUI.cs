@@ -13,13 +13,8 @@ public class OauthTestGUI : MonoBehaviour {
 	private Boolean isFB = true;
 	string url = "";
 	int server;
-	/*private String SCOPE_BASE = "audience:server:client_id:";
-	private String SCOPE;
-	private String CLIENT_ID = "729703693962-g5ol9mh39f2trarq7f0qt353gdens3sl.apps.googleusercontent.com";*/
-	String mEmail;
+	String mEmail = "";
 	String mScope;
-	//String mEmail = "edward@mogotxt.com";
-	//String mScope = "audience:server:client_id:729703693962-06r6rodhmbquar0d84kdlhffo6nbhdcl.apps.googleusercontent.com";
 	String token;
 	
 	
@@ -27,7 +22,10 @@ public class OauthTestGUI : MonoBehaviour {
 	void Start () {
 		FacebookAndroid.init();
 		// This is technically a security issue - having the consumer secret in plaintext is bad practice.
-		TwitterAndroid.init("lnPEQhhVho6fu9dd6FqLfhQ2L", "4Re1gImPvYhBhGX2jL2rb5xjraF3q6pWwWWpmKIVNAXwtcrYFG");
+        TwitterAndroid.init("F2FsdXIWjWTexgu55Cf6ER9Ld", "mh3VaoX2XpXvky0IUylDeSH742zUbtyMU61pOS2MBkPsivr5fd");
+        // Uncomment for App #2
+        //TwitterAndroid.init("Xp8GZ9AM9WEDTJlpyH8Sh7gQ2", "k4s6C54QvyYqzesXGnzdoETrYp4FRD6ozPjjcbZ1JVIsgvRAFY");
+
 		//Initializing GooglePlay platform
 		PlayGamesPlatform.Activate();
 	}
@@ -73,9 +71,13 @@ public class OauthTestGUI : MonoBehaviour {
 		}
 		if (GUI.Button(new Rect(0, 450, Screen.width, 100), "Print Token", buttonStyle))
 		{
-			Debug.Log("Access Token: " + CurrentAccessToken());
+            Debug.Log("Access Token: " + CurrentAccessToken()[0]);
 		}
-		GUI.TextField(new Rect(0, 550, Screen.width, 100), CurrentAccessToken()[0], textFieldStyle);
+        GUI.Label(new Rect(0, 650, Screen.width, 50), "Email", labelStyle);
+        mEmail = GUI.TextField(new Rect(0, 700, Screen.width, 100), mEmail, textFieldStyle);
+        // Putting this at the end in case it errors out - which it is apt to do
+        // (or it would be, if it weren't for the try-catch(Exception) in CurrentAccessToken)
+        GUI.TextField(new Rect(0, 550, Screen.width, 100), CurrentAccessToken()[0], textFieldStyle);
 	}
 	
 	void DoFacebookLogin()
@@ -102,31 +104,40 @@ public class OauthTestGUI : MonoBehaviour {
 				Debug.Log ("Authentication failed");
 		});
 	}
+    // index 0 is the token, index 1 is the secret (used for Twitter)
 	private string[] CurrentAccessToken()
 	{
-		
-		switch(server) {
-		case 0:
-			return new string[] {FacebookAndroid.getAccessToken(), ""};
-		case 1:
-			// prime31 hasn't publicly exposed the token, but this is the official way to get it
-			AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-			AndroidJavaObject activity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
-			AndroidJavaObject sharedPreferences = activity.Call<AndroidJavaObject>("getSharedPreferences", "Twitter_Preferences", 0);
-			
-			string oauthToken = sharedPreferences.Call<string>("getString", "auth_key", null);
-			string oauthTokenSecret = sharedPreferences.Call<string>("getString", "auth_secret_key", null);
-			return new string[] {oauthToken, oauthTokenSecret};
-		case 2:
-			AndroidJavaClass jc = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-			AndroidJavaObject jo = jc.GetStatic<AndroidJavaObject>("currentActivity");
-			AndroidJavaClass googleAuthUtilClass = new AndroidJavaClass("com.google.android.gms.auth.GoogleAuthUtil");
-			AndroidJavaObject androidEmailString = new AndroidJavaObject("java.lang.String", mEmail);
-			AndroidJavaObject androidScopeString = new AndroidJavaObject("java.lang.String", mScope);
-			token = googleAuthUtilClass.CallStatic<string>("getToken", new object[] {jo, androidEmailString, androidScopeString});
-			Debug.Log ("token");
-			return new string[] {token, ""};
-		}
+
+        try
+        {
+            switch (server)
+            {
+                case 0:
+                    return new string[] { FacebookAndroid.getAccessToken(), "" };
+                case 1:
+                    // prime31 hasn't publicly exposed the token, but this is the official way to get it
+                    AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                    AndroidJavaObject activity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+                    AndroidJavaObject sharedPreferences = activity.Call<AndroidJavaObject>("getSharedPreferences", "Twitter_Preferences", 0);
+
+                    string oauthToken = sharedPreferences.Call<string>("getString", "auth_key", null);
+                    string oauthTokenSecret = sharedPreferences.Call<string>("getString", "auth_secret_key", null);
+                    return new string[] { oauthToken, oauthTokenSecret };
+                case 2:
+                    AndroidJavaClass unityPlayerObj = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                    AndroidJavaObject currentActivityObj = unityPlayerObj.GetStatic<AndroidJavaObject>("currentActivity");
+                    //AndroidJavaClass googleAuthUtilClass = new AndroidJavaClass("com.google.android.gms.auth.GoogleAuthUtil");
+                    AndroidJavaObject androidEmailString = new AndroidJavaObject("java.lang.String", mEmail);
+                    AndroidJavaObject androidScopeString = new AndroidJavaObject("java.lang.String", mScope);
+                    AndroidJavaClass googleAuthUtilUtil = new AndroidJavaClass("com.mogotxt.googleauthutil.GoogleAuthUtilUtil");
+                    token = googleAuthUtilUtil.CallStatic<string>("getToken", new object[] { currentActivityObj, androidEmailString, androidScopeString, 0 });
+                    return new string[] { token, "" };
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.Log(e);
+        }
 		return null;
 		
 		
