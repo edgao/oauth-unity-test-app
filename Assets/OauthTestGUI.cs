@@ -105,36 +105,36 @@ public class OauthTestGUI : MonoBehaviour {
     // index 0 is the token, index 1 is the secret (used for Twitter)
 	private string[] CurrentAccessToken()
 	{
-
-        try
+        switch (server)
         {
-            switch (server)
-            {
-                case 0:
-                    return new string[] { FacebookAndroid.getAccessToken(), "" };
-                case 1:
-                    // prime31 hasn't publicly exposed the token, but this is the official way to get it
-                    AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-                    AndroidJavaObject activity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
-                    AndroidJavaObject sharedPreferences = activity.Call<AndroidJavaObject>("getSharedPreferences", "Twitter_Preferences", 0);
+            case 0:
+                return new string[] { FacebookAndroid.getAccessToken(), "" };
+            case 1:
+                // prime31 hasn't publicly exposed the token, but this is the official way to get it
+                AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                AndroidJavaObject activity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
+                AndroidJavaObject sharedPreferences = activity.Call<AndroidJavaObject>("getSharedPreferences", "Twitter_Preferences", 0);
 
-                    string oauthToken = sharedPreferences.Call<string>("getString", "auth_key", null);
-                    string oauthTokenSecret = sharedPreferences.Call<string>("getString", "auth_secret_key", null);
-                    return new string[] { oauthToken, oauthTokenSecret };
-                case 2:
-                    AndroidJavaClass unityPlayerObj = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-                    AndroidJavaObject currentActivityObj = unityPlayerObj.GetStatic<AndroidJavaObject>("currentActivity");
-                    //AndroidJavaClass googleAuthUtilClass = new AndroidJavaClass("com.google.android.gms.auth.GoogleAuthUtil");
-                    AndroidJavaObject androidEmailString = new AndroidJavaObject("java.lang.String", mEmail);
-                    AndroidJavaObject androidScopeString = new AndroidJavaObject("java.lang.String", mScope);
-                    AndroidJavaClass googleAuthUtilUtil = new AndroidJavaClass("com.mogotxt.googleauthutil.GoogleAuthUtilUtil");
+                string oauthToken = sharedPreferences.Call<string>("getString", "auth_key", null);
+                string oauthTokenSecret = sharedPreferences.Call<string>("getString", "auth_secret_key", null);
+                return new string[] { oauthToken, oauthTokenSecret };
+            case 2:
+                AndroidJavaClass unityPlayerObj = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                AndroidJavaObject currentActivityObj = unityPlayerObj.GetStatic<AndroidJavaObject>("currentActivity");
+                //AndroidJavaClass googleAuthUtilClass = new AndroidJavaClass("com.google.android.gms.auth.GoogleAuthUtil");
+                AndroidJavaObject androidEmailString = new AndroidJavaObject("java.lang.String", mEmail);
+                AndroidJavaObject androidScopeString = new AndroidJavaObject("java.lang.String", mScope);
+                AndroidJavaClass googleAuthUtilUtil = new AndroidJavaClass("com.mogotxt.googleauthutil.GoogleAuthUtilUtil");
+                try
+                {
                     token = googleAuthUtilUtil.CallStatic<string>("getToken", new object[] { currentActivityObj, androidEmailString, androidScopeString, 0 });
-                    return new string[] { token, "" };
-            }
-        }
-        catch (Exception e)
-        {
-            Debug.Log(e);
+                }
+                catch (AndroidJavaException e)
+                {
+                    // This is an expected error - the GoogleAuthUtilUtil is still starting/running the Intent to get permission
+                    // or we're waiting for the user to input their email
+                }
+                return new string[] { token, "" };
         }
 		return null;
 		
