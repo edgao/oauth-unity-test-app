@@ -14,7 +14,7 @@ public class OauthTestGUI : MonoBehaviour {
 	string url = "";
 	int server;
 	String mEmail = "";
-	String mScope;
+    String mScope = "oauth2:https://www.googleapis.com/auth/userinfo.profile";
 	String token;
 	
 	
@@ -96,8 +96,6 @@ public class OauthTestGUI : MonoBehaviour {
 					"\nUser ID: " + Social.localUser.id + 
 						"\nIsUnderage: " + Social.localUser.underage;
 				Debug.Log (userInfo);
-				mEmail = "Social.localUser.userName";
-				mScope = "oauth2:https://www.googleapis.com/auth/userinfo.profile";
 				
 			}
 			else
