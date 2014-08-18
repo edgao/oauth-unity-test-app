@@ -16,6 +16,8 @@ public class OauthTestGUI : MonoBehaviour {
 	String mEmail = "";
     String mScope = "oauth2:https://www.googleapis.com/auth/userinfo.profile";
 	String token;
+
+    string[] currentAccessToken = new string[] { "", "" };
 	
 	
 	// Use this for initialization
@@ -63,21 +65,19 @@ public class OauthTestGUI : MonoBehaviour {
 			DoGoogleLogin();
 			isFB = false;
 			server = 2;
-		}
-		if (GUI.Button(new Rect(0, 350, Screen.width, 100), "Submit Token", buttonStyle))
+        }
+        GUI.Label(new Rect(0, 350, Screen.width, 50), "Email", labelStyle);
+        mEmail = GUI.TextField(new Rect(0, 400, Screen.width, 100), mEmail, textFieldStyle);
+        if (GUI.Button(new Rect(0, 500, Screen.width, 100), "Get Token", buttonStyle))
 		{
-			string[] t = CurrentAccessToken();
-			SubmitToken(t[0], t[1], url);
+			currentAccessToken = CurrentAccessToken();
+            SubmitToken(currentAccessToken[0], currentAccessToken[1], url);
 		}
-		if (GUI.Button(new Rect(0, 450, Screen.width, 100), "Print Token", buttonStyle))
+		if (GUI.Button(new Rect(0, 600, Screen.width, 100), "Submit Token", buttonStyle))
 		{
-            Debug.Log("Access Token: " + CurrentAccessToken()[0]);
+            Debug.Log("Access Token: " + currentAccessToken[0]);
 		}
-        GUI.Label(new Rect(0, 650, Screen.width, 50), "Email", labelStyle);
-        mEmail = GUI.TextField(new Rect(0, 700, Screen.width, 100), mEmail, textFieldStyle);
-        // Putting this at the end in case it errors out - which it is apt to do
-        // (or it would be, if it weren't for the try-catch(Exception) in CurrentAccessToken)
-        GUI.TextField(new Rect(0, 550, Screen.width, 100), CurrentAccessToken()[0], textFieldStyle);
+        GUI.TextField(new Rect(0, 700, Screen.width, 100), currentAccessToken[0], textFieldStyle);
 	}
 	
 	void DoFacebookLogin()
