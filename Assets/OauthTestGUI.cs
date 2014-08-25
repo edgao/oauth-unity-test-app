@@ -9,6 +9,8 @@ using GooglePlayGames;
 using UnityEngine.SocialPlatforms;
 
 public class OauthTestGUI : MonoBehaviour {
+
+    private const int PROVIDER_FB = 0, PROVIDER_TWITTER = 1, PROVIDER_GOOGLE = 2;
 	
 	private Boolean isFB = true;
 	string url = "";
@@ -16,6 +18,7 @@ public class OauthTestGUI : MonoBehaviour {
 	String mEmail = "";
     String mScope = "oauth2:https://www.googleapis.com/auth/userinfo.profile";
 	String token;
+    String googleClientId;
 
     string[] currentAccessToken = new string[] { "", "" };
 	
@@ -24,12 +27,14 @@ public class OauthTestGUI : MonoBehaviour {
 	void Start () {
 		FacebookAndroid.init();
 		// This is technically a security issue - having the consumer secret in plaintext is bad practice.
-        //TwitterAndroid.init("F2FsdXIWjWTexgu55Cf6ER9Ld", "mh3VaoX2XpXvky0IUylDeSH742zUbtyMU61pOS2MBkPsivr5fd");
+        TwitterAndroid.init("F2FsdXIWjWTexgu55Cf6ER9Ld", "mh3VaoX2XpXvky0IUylDeSH742zUbtyMU61pOS2MBkPsivr5fd");
         // Uncomment for App #2
-        TwitterAndroid.init("Xp8GZ9AM9WEDTJlpyH8Sh7gQ2", "k4s6C54QvyYqzesXGnzdoETrYp4FRD6ozPjjcbZ1JVIsgvRAFY");
+        //TwitterAndroid.init("Xp8GZ9AM9WEDTJlpyH8Sh7gQ2", "k4s6C54QvyYqzesXGnzdoETrYp4FRD6ozPjjcbZ1JVIsgvRAFY");
 
 		//Initializing GooglePlay platform
 		PlayGamesPlatform.Activate();
+        googleClientId = "914214743891-a7j0ugfpf1m7h4c8l6omfkdhlred73uf.apps.googleusercontent.com";
+        //googleClientId = "936462937010-28949iidhl41jmttbc1kftf2geves75f.apps.googleusercontent.com";
 	}
 	
 	// Update is called once per frame
@@ -52,32 +57,34 @@ public class OauthTestGUI : MonoBehaviour {
 		{
 			DoFacebookLogin();
 			isFB = true;
-			server = 0;
+			server = PROVIDER_FB;
 		}
 		if (GUI.Button(new Rect(Screen.width / 2, 150, Screen.width / 2, 100), "Twitter", buttonStyle))
 		{
 			DoTwitterLogin();
 			isFB = false;
-			server = 1;
+			server = PROVIDER_TWITTER;
 		}
 		if (GUI.Button(new Rect(0, 250, Screen.width / 2, 100), "Google", buttonStyle))
 		{
 			DoGoogleLogin();
 			isFB = false;
-			server = 2;
+			server = PROVIDER_GOOGLE;
         }
         GUI.Label(new Rect(0, 350, Screen.width, 50), "Email", labelStyle);
         mEmail = GUI.TextField(new Rect(0, 400, Screen.width, 100), mEmail, textFieldStyle);
         if (GUI.Button(new Rect(0, 500, Screen.width, 100), "Get Token", buttonStyle))
 		{
-			currentAccessToken = CurrentAccessToken();
-            SubmitToken(currentAccessToken[0], currentAccessToken[1], url);
-		}
-		if (GUI.Button(new Rect(0, 600, Screen.width, 100), "Submit Token", buttonStyle))
-		{
+            currentAccessToken = CurrentAccessToken();
             Debug.Log("Access Token: " + currentAccessToken[0]);
 		}
+		if (GUI.Button(new Rect(0, 600, Screen.width, 100), "Submit Token", buttonStyle))
+        {
+            SubmitToken(currentAccessToken, url, server);
+            Debug.Log("Access Token: " + currentAccessToken[0] + " AND " + currentAccessToken[1]);
+		}
         GUI.TextField(new Rect(0, 700, Screen.width, 100), currentAccessToken[0], textFieldStyle);
+        GUI.TextField(new Rect(0, 800, Screen.width, 100), currentAccessToken[1], textFieldStyle);
 	}
 	
 	void DoFacebookLogin()
@@ -107,9 +114,9 @@ public class OauthTestGUI : MonoBehaviour {
 	{
         switch (server)
         {
-            case 0:
+            case PROVIDER_FB:
                 return new string[] { FacebookAndroid.getAccessToken(), "" };
-            case 1:
+            case PROVIDER_TWITTER:
                 // prime31 hasn't publicly exposed the token, but this is the official way to get it
                 AndroidJavaClass unityPlayerClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
                 AndroidJavaObject activity = unityPlayerClass.GetStatic<AndroidJavaObject>("currentActivity");
@@ -118,21 +125,21 @@ public class OauthTestGUI : MonoBehaviour {
                 string oauthToken = sharedPreferences.Call<string>("getString", "auth_key", null);
                 string oauthTokenSecret = sharedPreferences.Call<string>("getString", "auth_secret_key", null);
                 return new string[] { oauthToken, oauthTokenSecret };
-            case 2:
+            case PROVIDER_GOOGLE:
                 AndroidJavaClass unityPlayerObj = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
                 AndroidJavaObject currentActivityObj = unityPlayerObj.GetStatic<AndroidJavaObject>("currentActivity");
-                //AndroidJavaClass googleAuthUtilClass = new AndroidJavaClass("com.google.android.gms.auth.GoogleAuthUtil");
-                AndroidJavaObject androidEmailString = new AndroidJavaObject("java.lang.String", mEmail);
-                AndroidJavaObject androidScopeString = new AndroidJavaObject("java.lang.String", mScope);
                 AndroidJavaClass googleAuthUtilUtil = new AndroidJavaClass("com.mogotxt.googleauthutil.GoogleAuthUtilUtil");
+                String[] scopesArray = new String[] { "https://www.googleapis.com/auth/userinfo.profile" };
                 try
                 {
-                    token = googleAuthUtilUtil.CallStatic<string>("getToken", new object[] { currentActivityObj, androidEmailString, androidScopeString, 0 });
+                    token = googleAuthUtilUtil.CallStatic<string>("getServerAuthCode", new object[] { currentActivityObj, mEmail, googleClientId, new String[0], scopesArray });
                 }
                 catch (AndroidJavaException e)
                 {
                     // This is an expected error - the GoogleAuthUtilUtil is still starting/running the Intent to get permission
                     // or we're waiting for the user to input their email
+                    Debug.Log(e.Message);
+                    Debug.Log(e.StackTrace);
                 }
                 return new string[] { token, "" };
         }
@@ -326,26 +333,37 @@ public class OauthTestGUI : MonoBehaviour {
         sha.Initialize();
         return System.Convert.ToBase64String(sha.ComputeHash(Encoding.ASCII.GetBytes(sigBaseString)));
     }*/
-	void SubmitToken(string token, string secret, string url)
-	{
+	void SubmitToken(string[] token, string url, int provider)
+    {
+        // Must use WWWForm to force POST method
+        WWWForm form = new WWWForm();
+
 		if (url.IndexOf('?') == -1)
 		{
-			url += "?client_token=" + token;
+            url += "?";
 		}
 		else
 		{
-			url += "&client_token=" + token;
+			url += "&";
 		}
+
+        switch (provider)
+        {
+            case PROVIDER_FB:
+                url += "access_token=" + token[0];
+                form.AddField("access_token", token[0]);
+                break;
+            case PROVIDER_TWITTER:
+                url += "access_token=" + token[0] + "&access_token_secret=" + token[1];
+                form.AddField("access_token", token[0]);
+                form.AddField("access_token_secret", token[1]);
+                break;
+            case PROVIDER_GOOGLE:
+                url += "auth_code=" + token[0];
+                form.AddField("auth_code", token[0]);
+                break;
+        }
 		
-		// Must use WWWForm to force POST method
-		WWWForm form = new WWWForm();
-		form.AddField("client_token", token);
-		// If there is a secret as well
-		if (!secret.Equals(""))
-		{
-			url += "&client_secret=" + secret;
-			form.AddField("client_secret", secret);
-		}
 		WWW www = new WWW(url, form);
 	}
 	string URLEncode(string str)

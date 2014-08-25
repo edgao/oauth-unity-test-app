@@ -12,11 +12,11 @@
     </activity>
     <activity configChanges="orientation|screenLayout|screenSize" android:name="com.facebook.LoginActivity" />
     
-    <!-- <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="\ 1513192532236941" />
-    -->
-    <!-- Uncomment for FB App 2-->
-    <!----> <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="\ 1525834977639363" />
+    <!----> <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="\ 1513192532236941" />
     <!---->
+    <!-- Uncomment for FB App 2-->
+    <!-- <meta-data android:name="com.facebook.sdk.ApplicationId" android:value="\ 1525834977639363" />
+    -->
     
     <meta-data android:name="com.prime31.FacebookPlugin" android:value="UnityPlayerActivityProxy" />
   </application>
